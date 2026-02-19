@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+dist/
+build/
+*.egg
+*.env
+*.env.*
+dbt_packages/
+target/
+logs/
+*.log
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# dbt / data
+profiles.yml          # if it has creds – or .dbt/
+*.parquet
+*.csv                 # if large/raw data
+*.gz
+data/                 # raw/large files
+notebooks/            # local exploration
+.DS_Store
+.vscode/
+.idea/
+
+# Airflow / orchestration
+airflow.cfg           # if customized locally
+airflow-webserver.pid
+airflow-scheduler.pid
+dags/__pycache__/
+
+# keys
+/terraform/keys/
+*.json
