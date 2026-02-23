@@ -15,3 +15,13 @@ resource "google_project_service" "bigquery_storage" {
   project = var.project_id
   service = "bigquerystorage.googleapis.com"
 }
+
+resource "google_project_service" "iam" {
+  project = var.project_id
+  service = "iam.googleapis.com"
+}
+
+resource "google_project_service" "resource_manager" {
+  project = var.project_id
+  service = "cloudresourcemanager.googleapis.com"
+}
