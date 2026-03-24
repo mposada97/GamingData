@@ -1,1 +1,10 @@
-#TODO
+services:
+  pipeline:
+    build: .
+    volumes: 
+      - ./flows:/code/flows
+      - ./dbt:/code/dbt
+      - ./keys/gcp_prefect.json:/code/keys/gcp_prefect.json
+      - ./keys/gcp_dbt.json:/code/keys/gcp_dbt.json
+    env_file:                         
+        - .env
