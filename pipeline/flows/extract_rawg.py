@@ -12,12 +12,11 @@ RAWG_BASE_URL = "https://api.rawg.io/api"
 RAWG_API_KEY = os.getenv("RAWG_API_KEY")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 STATE_BLOB_PATH = "raw/state/last_run.json"
-BACKFILL_START = "1999-01-01"
+BACKFILL_START = "2019-07-01" #"1999-01-01"
 
 
 # ── API client (used to get data from any rawg endpoint) ────────────────────────────────────────────────────────────────
 def fetch_all_pages(endpoint: str, params: dict[str, any] = {}) -> list[dict]:
-    """Generic paginated fetcher. Works for any RAWG endpoint."""
     base_params = {"key": RAWG_API_KEY, "page_size": 40, "page": 1}
     results = []
     if params:
@@ -27,18 +26,27 @@ def fetch_all_pages(endpoint: str, params: dict[str, any] = {}) -> list[dict]:
 
     while url:
         for attempt in range(3):
-            response = requests.get(url, params=base_params)
-            if response.status_code in (502, 503, 520): ## adding retry because of pagination errors
-                print(f"Server error {response.status_code}, retrying in 10s... (attempt {attempt + 1}/3)")
+            try:
+                response = requests.get(url, params=base_params)
+                if response.status_code in (502, 503, 520): #catch pagination errors and retry call
+                    print(f"Server error {response.status_code}, retrying in 10s... ({attempt + 1}/3)")
+                    time.sleep(10)
+                    continue
+                break
+            except requests.exceptions.SSLError:
+                print(f"SSL error, retrying in 10s... ({attempt + 1}/3)")
                 time.sleep(10)
                 continue
+        if response.status_code == 404 and len(results) > 0:
+            print(f"Hit pagination limit at {len(results)} results — stopping.")
             break
         response.raise_for_status()
         data = response.json()
         results.extend(data.get("results", []))
-        url = data.get("next")      # RAWG returns the next page URL directly
-        base_params = {}  # Clears params after first run, this will be included in the url from "next"
-    return results 
+        url = data.get("next")
+        base_params = {}
+    return results
+
 
 # ── state management ──────────────────────────────────────────────────────────
 # This is used to track the last successful run date so we can resume from the last successful run.
@@ -79,7 +87,7 @@ def write_last_run_date(run_date: str) -> None:
 
 # ── fetch tasks ───────────────────────────────────────────────────────────────
 
-@task(log_prints=True, retries=3, retry_delay_seconds=10)
+@task(log_prints=True)
 def fetch_games(updated_after: str) -> list[dict]:
     """
     Core fact table source. Fetched incrementally — only games updated
@@ -105,15 +113,15 @@ def fetch_games(updated_after: str) -> list[dict]:
     end = datetime.strptime(tomorrow, "%Y-%m-%d")
 
 
-    #build a list of tuples with start and end date, a single call cant handle all data, api is capped at 250k rows
+    #build a list of tuples with start and end date, a single call cant handle all data, api is capped at 10k rows
     chunks = []
     current = start
     while current < end:
-        chunk_end = min(current + relativedelta(months=1), end)
+        chunk_end = (current + relativedelta(months=1)) - timedelta(days=1)
         chunks.append((current.strftime("%Y-%m-%d"), chunk_end.strftime("%Y-%m-%d")))
-        current = chunk_end
+        current = current + relativedelta(months=1)
 
-    all_games = []
+    total = 0
     for chunk_start, chunk_end in chunks:
         print(f"  Chunk: {chunk_start} → {chunk_end}")
         games = fetch_all_pages(
@@ -124,10 +132,12 @@ def fetch_games(updated_after: str) -> list[dict]:
             }
         )
         print(f"  Got {len(games)} games")
-        all_games.extend(games)
+        if games:
+            upload_to_gcs(games, "games", incremental=True)
+            total += len(games)
 
-    print(f"Fetched {len(all_games)} games")
-    return games
+    print(f"Fetched {total} games")
+    return None
 
 
 @task(log_prints=True, retries=3, retry_delay_seconds=10)
@@ -219,7 +229,7 @@ def extract_rawg() -> None:
 
     # incremental — only games changed since last run
     games = fetch_games(updated_after)
-    upload_to_gcs(games, "games", incremental=True)
+    #upload_to_gcs(games, "games", incremental=True) this is being done by chunks in fetch games
 
     # full snapshots — small lookup tables, always pull everything
     genres = fetch_genres()
