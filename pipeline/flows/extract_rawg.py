@@ -12,12 +12,12 @@ RAWG_BASE_URL = "https://api.rawg.io/api"
 RAWG_API_KEY = os.getenv("RAWG_API_KEY")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 STATE_BLOB_PATH = "raw/state/last_run.json"
-BACKFILL_START = "2019-07-01" #"1999-01-01"
+BACKFILL_START = "2020-01-01" #"1999-01-01"
 
 
 # ── API client (used to get data from any rawg endpoint) ────────────────────────────────────────────────────────────────
 def fetch_all_pages(endpoint: str, params: dict[str, any] = {}) -> list[dict]:
-    base_params = {"key": RAWG_API_KEY, "page_size": 40, "page": 1}
+    base_params = {"key": RAWG_API_KEY, "page_size": 250, "page": 1}
     results = []
     if params:
         base_params.update(params)
