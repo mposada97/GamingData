@@ -3,8 +3,9 @@ services:
     build: .
     volumes: 
       - ./flows:/code/flows
-      - ./dbt:/code/dbt
+      - ./gaming_data_dbt:/code/gaming_data_dbt
       - ./keys/gcp_prefect.json:/code/keys/gcp_prefect.json
       - ./keys/gcp_dbt.json:/code/keys/gcp_dbt.json
+      - ./profiles.yml:/root/.dbt/profiles.yml
     env_file:                         
         - .env
