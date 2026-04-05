@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: gamingdata-487900
+    schema: bronze
+    tables:
+      - name: games
+      - name: genres
+      - name: platforms
+      - name: publishers
+      - name: tags
