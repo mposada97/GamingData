@@ -1,0 +1,210 @@
+version: 2
+
+models:
+  - name: stg_dim_genres
+    description: "Latest snapshot of genres from bronze, deduplicated to current state."
+    columns:
+      - name: genre_id
+        description: "Primary key. RAWG genre ID."
+        tests:
+          - unique
+          - not_null
+      - name: name
+        tests:
+          - not_null
+      - name: slug
+        tests:
+          - not_null
+
+  - name: dim_genres
+    description: "Final genres dimension. Passthrough from stg_dim_genres."
+
+  - name: stg_dim_platforms
+    description: "Latest snapshot of platforms from bronze, deduplicated to current state."
+    columns:
+      - name: platform_id
+        description: "Primary key. RAWG platform ID."
+        tests:
+          - unique
+          - not_null
+      - name: name
+        tests:
+          - not_null
+      - name: slug
+        tests:
+          - not_null
+
+  - name: dim_platforms
+    description: "Final platforms dimension. Passthrough from stg_dim_platforms."
+
+  - name: stg_dim_tags
+    description: "Latest snapshot of tags from bronze, deduplicated to current state."
+    columns:
+      - name: tag_id
+        description: "Primary key. RAWG tag ID."
+        tests:
+          - unique
+          - not_null
+      - name: name
+        tests:
+          - not_null
+      - name: slug
+        tests:
+          - not_null
+
+  - name: dim_tags
+    description: "Final tags dimension. Passthrough from stg_dim_tags."
+
+  - name: stg_dim_games
+    description: "Deduplicated current state of every game from bronze. One row per game, latest version by updated timestamp."
+    columns:
+      - name: game_id
+        description: "Primary key. RAWG game ID."
+        tests:
+          - unique
+          - not_null
+      - name: name
+        tests:
+          - not_null
+      - name: slug
+        tests:
+          - not_null
+      - name: load_date
+        description: "Date this version was loaded into bronze."
+        tests:
+          - not_null
+      - name: updated
+        description: "Last updated timestamp from RAWG. Used for deduplication."
+        tests:
+          - not_null
+
+  - name: dim_games
+    description: "Final games dimension. Current state of every game, partitioned by released date."
+
+  - name: stg_fct_game_snapshots
+    description: "Historical metric snapshots. Grain is one row per game per load_date. Tracks how game metrics evolve over time."
+    columns:
+      - name: game_id
+        description: "Foreign key to stg_dim_games."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_games')
+              field: game_id
+      - name: load_date
+        description: "Date this snapshot was captured."
+        tests:
+          - not_null
+
+  - name: fct_game_snapshots
+    description: "Final periodic snapshot fact table. One row per game per load_date, partitioned by load_date."
+
+  - name: stg_brdg_game_genres
+    description: "Many-to-many bridge between games and genres."
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_games')
+              field: game_id
+      - name: genre_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_genres')
+              field: genre_id
+      - name: load_date
+        tests:
+          - not_null
+
+  - name: brdg_game_genres
+    description: "Final bridge table between games and genres."
+
+  - name: stg_brdg_game_platforms
+    description: "Many-to-many bridge between games and platforms."
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_games')
+              field: game_id
+      - name: platform_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_platforms')
+              field: platform_id
+      - name: load_date
+        tests:
+          - not_null
+
+  - name: brdg_game_platforms
+    description: "Final bridge table between games and platforms."
+
+  - name: stg_brdg_game_parent_platforms
+    description: "Many-to-many bridge between games and parent platforms (PC, PlayStation, Xbox, etc). Carries name and slug since there is no dim_parent_platforms."
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_games')
+              field: game_id
+      - name: parent_platform_id
+        tests:
+          - not_null
+      - name: parent_platform_name
+        tests:
+          - not_null
+      - name: load_date
+        tests:
+          - not_null
+
+  - name: brdg_game_parent_platforms
+    description: "Final bridge table between games and parent platforms."
+
+  - name: stg_brdg_game_stores
+    description: "Many-to-many bridge between games and stores. Carries name and slug since there is no dim_stores."
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_games')
+              field: game_id
+      - name: store_id
+        tests:
+          - not_null
+      - name: store_name
+        tests:
+          - not_null
+      - name: load_date
+        tests:
+          - not_null
+
+  - name: brdg_game_stores
+    description: "Final bridge table between games and stores."
+
+  - name: stg_brdg_game_tags
+    description: "Many-to-many bridge between games and tags."
+    columns:
+      - name: game_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_games')
+              field: game_id
+      - name: tag_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dim_tags')
+              field: tag_id
+      - name: load_date
+        tests:
+          - not_null
+
+  - name: brdg_game_tags
+    description: "Final bridge table between games and tags."

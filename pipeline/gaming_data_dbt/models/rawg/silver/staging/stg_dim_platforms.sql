@@ -9,7 +9,6 @@ with latest_snapshot as (
         image_background,
         year_start,
         year_end,
-        description,
         row_number() over (partition by id order by load_date desc) as rn
     from {{ source('bronze', 'platforms') }}
 )
