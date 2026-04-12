@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: fct_releases_by_genre_monthly
+    description: "Release landscape by genre, monthly. Answers 'where is supply going' — which genres are capturing a growing share of new releases over time."
+    columns:
+      - name: release_month
+        tests: [not_null]
+      - name: genre_id
+        tests: [not_null]
+
+  - name: fct_releases_by_platform_monthly
+    description: "Release landscape by platform, monthly. Which platforms are getting more new releases over time."
+    columns:
+      - name: release_month
+        tests: [not_null]
+      - name: platform_id
+        tests: [not_null]
+
+  - name: fct_trending_tags_monthly
+    description: "Top 50 tags per month by game count. Captures thematic/mechanical trends in new releases."
+    columns:
+      - name: release_month
+        tests: [not_null]
+      - name: tag_id
+        tests: [not_null]
+
+  - name: fct_genre_activity_monthly
+    description: "Genre activity per month based on RAWG updates landing in that month. Uses load_date grain — activity-based, not full-state snapshot."
+    columns:
+      - name: month_start
+        tests: [not_null]
+      - name: genre_id
+        tests: [not_null]
