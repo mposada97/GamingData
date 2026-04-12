@@ -6,6 +6,6 @@ gaming_data:
       method: service-account
       project: gamingdata-487900
       keyfile: "{{ env_var('DBT_GOOGLE_CREDENTIALS') }}"
-      dataset: silver
+      dataset: gaming_data
       threads: 4
       location: US

@@ -2,7 +2,11 @@
     materialized='incremental',
     unique_key='game_id',
     incremental_strategy='merge',
-    partition_by={'field': 'released', 'data_type': 'date'},
+    partition_by={
+        'field': 'released',
+        'data_type': 'date',
+        'granularity': 'month'
+    },
     cluster_by=['game_id']
 ) }}
 

@@ -20,7 +20,6 @@ select
     games_count,
     image_background,
     year_start,
-    year_end,
-    description
+    year_end
 from latest_snapshot
 where rn = 1

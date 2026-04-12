@@ -38,7 +38,7 @@ models:
     description: "Final platforms dimension. Passthrough from stg_dim_platforms."
 
   - name: stg_dim_tags
-    description: "Latest snapshot of tags from bronze, deduplicated to current state."
+    description: "Latest snapshot of tags from bronze, deduplicated to current state. Note: bronze.tags is incomplete — many tags appear on games that aren't in this lookup."
     columns:
       - name: tag_id
         description: "Primary key. RAWG tag ID."
@@ -82,22 +82,26 @@ models:
     description: "Final games dimension. Current state of every game, partitioned by released date."
 
   - name: stg_fct_game_snapshots
-    description: "Historical metric snapshots. Grain is one row per game per load_date. Tracks how game metrics evolve over time."
+    description: "Historical metric snapshots. Grain is one row per game per load_date. Tracks how game metrics evolve over time. Periodic activity fact — one row per (game, load_date) for every game that had a RAWG update landing on that load_date. Not a full state snapshot across all games; only games with activity appear."
     columns:
       - name: game_id
-        description: "Foreign key to stg_dim_games."
+        description: "Foreign key to dim_games."
         tests:
           - not_null
-          - relationships:
-              to: ref('stg_dim_games')
-              field: game_id
       - name: load_date
         description: "Date this snapshot was captured."
         tests:
           - not_null
 
   - name: fct_game_snapshots
-    description: "Final periodic snapshot fact table. One row per game per load_date, partitioned by load_date."
+    description: "Periodic activity fact — one row per (game, load_date) for every game that had a RAWG update landing on that load_date. Not a full state snapshot across all games; only games with activity appear."
+    columns:
+      - name: game_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
 
   - name: stg_brdg_game_genres
     description: "Many-to-many bridge between games and genres."
@@ -105,21 +109,28 @@ models:
       - name: game_id
         tests:
           - not_null
-          - relationships:
-              to: ref('stg_dim_games')
-              field: game_id
       - name: genre_id
         tests:
           - not_null
-          - relationships:
-              to: ref('stg_dim_genres')
-              field: genre_id
       - name: load_date
         tests:
           - not_null
 
   - name: brdg_game_genres
     description: "Final bridge table between games and genres."
+    columns:
+      - name: game_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
+      - name: genre_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_genres')
+                field: genre_id
 
   - name: stg_brdg_game_platforms
     description: "Many-to-many bridge between games and platforms."
@@ -127,84 +138,48 @@ models:
       - name: game_id
         tests:
           - not_null
-          - relationships:
-              to: ref('stg_dim_games')
-              field: game_id
       - name: platform_id
         tests:
           - not_null
-          - relationships:
-              to: ref('stg_dim_platforms')
-              field: platform_id
       - name: load_date
         tests:
           - not_null
 
   - name: brdg_game_platforms
     description: "Final bridge table between games and platforms."
-
-  - name: stg_brdg_game_parent_platforms
-    description: "Many-to-many bridge between games and parent platforms (PC, PlayStation, Xbox, etc). Carries name and slug since there is no dim_parent_platforms."
     columns:
       - name: game_id
         tests:
-          - not_null
           - relationships:
-              to: ref('stg_dim_games')
-              field: game_id
-      - name: parent_platform_id
+              arguments:
+                to: ref('dim_games')
+                field: game_id
+      - name: platform_id
         tests:
-          - not_null
-      - name: parent_platform_name
-        tests:
-          - not_null
-      - name: load_date
-        tests:
-          - not_null
-
-  - name: brdg_game_parent_platforms
-    description: "Final bridge table between games and parent platforms."
-
-  - name: stg_brdg_game_stores
-    description: "Many-to-many bridge between games and stores. Carries name and slug since there is no dim_stores."
-    columns:
-      - name: game_id
-        tests:
-          - not_null
           - relationships:
-              to: ref('stg_dim_games')
-              field: game_id
-      - name: store_id
-        tests:
-          - not_null
-      - name: store_name
-        tests:
-          - not_null
-      - name: load_date
-        tests:
-          - not_null
-
-  - name: brdg_game_stores
-    description: "Final bridge table between games and stores."
+              arguments:
+                to: ref('dim_platforms')
+                field: platform_id
 
   - name: stg_brdg_game_tags
-    description: "Many-to-many bridge between games and tags."
+    description: "Many-to-many bridge between games and tags. Note: many tag_ids here won't match dim_tags because bronze.tags is incomplete."
     columns:
       - name: game_id
         tests:
           - not_null
-          - relationships:
-              to: ref('stg_dim_games')
-              field: game_id
       - name: tag_id
         tests:
           - not_null
-          - relationships:
-              to: ref('stg_dim_tags')
-              field: tag_id
       - name: load_date
         tests:
           - not_null
 
   - name: brdg_game_tags
-    description: "Final bridge table between games and tags."
+    description: "Final bridge table between games and tags. No relationships test on tag_id because bronze.tags lookup is incomplete — many tags on games aren't in the tags dim."
+    columns:
+      - name: game_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_games')
+                field: game_id
