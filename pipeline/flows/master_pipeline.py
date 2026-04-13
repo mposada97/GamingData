@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 from prefect import flow, task, get_run_logger
 
-from extract_rawg import extract_rawg_flow
+from extract_rawg import extract_rawg
 from load_to_bronze import load_to_bronze
 
 DBT_PROJECT_DIR = "/code/gaming_data_dbt"
@@ -28,7 +28,7 @@ def gaming_data_pipeline():
     logger = get_run_logger()
 
     logger.info("Step 1: Extract RAWG to GCS")
-    extract_rawg_flow()
+    extract_rawg()
 
     logger.info("Step 2: Load GCS to bronze BigQuery")
     load_to_bronze()
