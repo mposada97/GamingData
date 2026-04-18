@@ -2,7 +2,8 @@
 
 The idea behind this project is to build an end-to-end data pipeline that tracks where player attention is going in the gaming industry. The target audience is gaming company executives who want to understand which genres, platforms, and themes are gaining traction before they peak. The pipeline ingests data from the RAWG video game database API, processes it through a medallion architecture (bronze, silver, gold), and surfaces the results in a Looker Studio dashboard.
 
-image.png
+<img width="2200" height="1440" alt="image" src="https://github.com/user-attachments/assets/391463b2-befe-4f68-96b2-a78d45bfa836" />
+
 
 # Scope and Business Case
 
@@ -95,7 +96,8 @@ The master pipeline is a single Prefect flow (`flows/master_pipeline.py`) that c
 
 # Data Visualization
 
-image.png
+<img width="900" height="675" alt="image" src="https://github.com/user-attachments/assets/ac5c77e5-05ad-4f22-85f5-5c217a306954" />
+
 
 [View the live dashboard](https://datastudio.google.com/reporting/202fe8f9-f845-42ef-8903-a103b462345f)
 
