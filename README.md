@@ -165,7 +165,6 @@ terraform apply
 
 This creates the GCS bucket, BigQuery datasets, Artifact Registry repository, and IAM bindings for the service accounts.
 
-# Learnings and Next Steps
 
 # Learnings and Next Steps
 
