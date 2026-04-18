@@ -39,7 +39,7 @@ It is also important to mention that the dashboard included in the project is ju
 
 # Architecture
 
-<!-- TODO: Add architecture diagram image here showing: RAWG API → Extract (Python) → GCS (raw NDJSON) → Load with WAP (Python) → Bronze (BigQuery) → dbt silver → dbt gold → Looker Studio. Prefect orchestrates the whole thing. -->
+(Check out the image in the introduction)
 
 The pipeline runs as a single Prefect flow with four steps:
 
@@ -167,11 +167,21 @@ This creates the GCS bucket, BigQuery datasets, Artifact Registry repository, an
 
 # Learnings and Next Steps
 
-<!-- TODO: Write this section yourself. Some topics to cover:
-- WAP pattern: you mentioned learning about it in your chess project README and wanting to use it in future projects. You actually implemented it here in bronze and used a test-gated DAG pattern in silver.
-- The decision not to use SCD2 and why current-state dims + a snapshot fact table was the better call.
-- Incremental modeling decisions: where you used merge vs insert_overwrite and why.
-- What you would do differently (maybe the extract strategy, or adding Twitch sooner).
-- Twitch integration as the next phase.
-- Cloud Run deployment as the next infrastructure step.
--->
+# Learnings and Next Steps
+
+Building this project forced me to think through a lot of decisions that I hadn't dealt with before. The biggest one was deciding not to use SCD2 for the games dimension. My first instinct was to implement it because thats what you learn in every data modeling course, but when I thought about what it would actually do to the bridge tables (surrogate keys everywhere, every join becomes more complex, every query needs an is_current filter) I realized it was adding complexity without solving a real problem. Instead I kept dim_games as current-state and added fct_game_snapshots as a periodic snapshot fact table to capture historical metrics. Same outcome, cleaner model, no surrogate key confusion.
+
+The WAP pattern was another big one. In my previous project I wrote in the README that I should have used it and would implement it next time. I actually did it here. Bronze uses a proper Write-Audit-Publish flow with staging tables that get promoted only if checks pass. For silver I used dbt's DAG to enforce the same idea, staging models carry the tests and final tables only build if upstream tests pass. Its not a perfect WAP implementation since the stg tables persist, but it achieves the same goal of keeping bad data out of the tables that analysts query.
+
+I also learned a lot about incremental modeling in dbt, specifically the difference between merge and insert_overwrite strategies. Merge works for mutable entity rows where you want to update a specific game by its ID. Insert_overwrite works for time-partitioned facts where each partition is a complete unit and you want to replace it cleanly. I tried to make the gold tables incremental too but ran into the issue that window functions like LAG need the previous partition in the same batch to compute month-over-month changes, which insert_overwrite doesnt give you. For small aggregation tables full refresh was the right call.
+
+The data source itself was a learning experience. RAWG is community-sourced which means recent releases are underrepresented and metrics like Metacritic scores are sparse for anything in the last year or two. This made me realize that for the business case to really work (telling executives where attention is right now) you cant rely on a single historical catalog.
+
+One of the hardest things was making the pipeline idempotent. I spent a lot of time trying to guarantee that every layer would produce the same result no matter when or how many times you run it. I eventually realized that what matters most is idempotency in silver and gold since those are the layers exposed to analysts and BI tools. Bronze handles this through WAP and upsert semantics, and the raw landing zone in GCS is append-only by design so historical data is never lost. The extract itself is cursor-based (game pulls are based on a last state date that I store) and not perfectly replayable, but that's fine because the downstream layers are built to handle whatever lands in bronze.
+
+### Next steps
+
+- **Twitch integration**: Adding Twitch as a real-time data source is the natural next step. RAWG tells you where attention has been, Twitch tells you where it is right now. Stream sessions, viewer counts, and chat activity would feed into a fct_stream_sessions fact table that joins to the same dim_games through the existing bridges. This is already planned in the project structure with room for a models/twitch/ folder alongside models/rawg/.
+- **Explore a different primary source**: RAWG's recency gap is a real limitation. Steam's API or IGDB might provide more complete coverage of recent releases and player activity. The pipeline architecture wouldnt change much, just the extract layer and the bronze schema.
+- **Cloud Run deployment**: The pipeline runs end to end in Docker locally but hasnt been deployed to Cloud Run yet. The Dockerfile, Terraform, and Prefect flow are all ready for it, its just a matter of pushing the image to Artifact Registry and configuring the work pool.
+- **Scheduling**: Once deployed, the pipeline would run weekly on Monday mornings via a Prefect cron schedule. The incremental extract and load steps make this efficient since only new data gets processed each run.
