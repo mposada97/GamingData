@@ -54,7 +54,8 @@ The pipeline runs as a single Prefect flow with four steps:
 
 Silver is a dimensional model centered on `dim_games` with bridge tables connecting games to genres, platforms, and tags. There is also a periodic snapshot fact table (`fct_game_snapshots`) that preserves the historical state of game metrics across load dates.
 
-<!-- TODO: Add the silver ERD image here -->
+<img width="1880" height="1944" alt="image" src="https://github.com/user-attachments/assets/dfecfaf4-271f-414f-9e5e-83fe4e7f8637" />
+
 
 ### Dimensions
 
