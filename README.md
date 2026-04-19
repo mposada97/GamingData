@@ -91,9 +91,217 @@ Silver is a dimensional model centered on `dim_games` with bridge tables connect
 
 # The Pipeline
 
-<!-- TODO: Add a screenshot of the Prefect flow run or the master pipeline DAG here -->
+<details>
+<summary>Full pipeline run output (click to expand)</summary>
 
-The master pipeline is a single Prefect flow (`flows/master_pipeline.py`) that chains extract, load, silver, and gold in sequence. If any step fails, subsequent steps don't run. dbt is invoked via subprocess from within the flow, and `dbt build` runs models and tests together so that test failures block downstream models.
+20:31:37.811 | INFO    | prefect - Starting temporary server on http://127.0.0.1:8400
+See https://docs.prefect.io/v3/concepts/server#how-to-guides for more information on running a dedicated Prefect server.
+20:31:40.900 | INFO    | Flow run 'real-poodle' - Beginning flow run 'real-poodle' for flow 'gaming_data_pipeline'
+20:31:40.903 | INFO    | Flow run 'real-poodle' - Step 1: Extract RAWG to GCS
+20:31:40.950 | INFO    | Flow run 'sassy-catfish' - Beginning subflow run 'sassy-catfish' for flow 'extract_rawg'
+20:31:41.664 | INFO    | Task run 'read_last_run_date-b11' - Last successful run was: 2026-04-13
+20:31:41.668 | INFO    | Task run 'read_last_run_date-b11' - Finished in state Completed()
+20:31:41.673 | INFO    | Task run 'fetch_games-270' - Incremental mode — fetching games updated since 2026-04-13
+20:31:41.675 | INFO    | Task run 'fetch_games-270' -   Chunk: 2026-04-13 → 2026-05-12
+20:32:20.454 | INFO    | Task run 'fetch_games-270' -   Got 1556 games
+20:32:25.255 | INFO    | Task run 'upload_to_gcs-198' - Uploaded 1556 records to gs://gamingdata-487900-bucket/raw/games/run_date=2026-04-19/games_2026-04-19T203222.ndjson
+20:32:25.261 | INFO    | Task run 'upload_to_gcs-198' - Finished in state Completed()
+20:32:25.263 | INFO    | Task run 'fetch_games-270' - Fetched 1556 games
+20:32:25.265 | INFO    | Task run 'fetch_games-270' - Finished in state Completed()
+20:32:25.283 | INFO    | Task run 'fetch_genres-8d1' - Fetching genres...
+20:32:32.220 | INFO    | Task run 'fetch_genres-8d1' - Fetched 19 genres
+20:32:32.224 | INFO    | Task run 'fetch_genres-8d1' - Finished in state Completed()
+20:32:32.228 | INFO    | Task run 'fetch_platforms-fc2' - Fetching platforms...
+20:32:34.707 | INFO    | Task run 'fetch_platforms-fc2' - Fetched 51 platforms
+20:32:34.711 | INFO    | Task run 'fetch_platforms-fc2' - Finished in state Completed()
+20:32:34.714 | INFO    | Task run 'fetch_publishers-aa2' - Fetching publishers...
+21:06:08.365 | INFO    | Task run 'fetch_publishers-aa2' - Fetched 90267 publishers
+21:06:08.489 | INFO    | Task run 'fetch_publishers-aa2' - Finished in state Completed()
+21:06:08.491 | INFO    | Task run 'fetch_tags-f09' - Fetching tags...
+21:09:51.148 | INFO    | Task run 'fetch_tags-f09' - Fetched 9727 tags
+21:09:51.186 | INFO    | Task run 'fetch_tags-f09' - Finished in state Completed()
+21:09:51.832 | INFO    | Task run 'upload_to_gcs-0c0' - Uploaded 19 records to gs://gamingdata-487900-bucket/raw/genres/snapshot_date=2026-04-19/genres.ndjson
+21:09:51.837 | INFO    | Task run 'upload_to_gcs-0c0' - Finished in state Completed()
+21:09:52.511 | INFO    | Task run 'upload_to_gcs-eb4' - Uploaded 51 records to gs://gamingdata-487900-bucket/raw/platforms/snapshot_date=2026-04-19/platforms.ndjson
+21:09:52.515 | INFO    | Task run 'upload_to_gcs-eb4' - Finished in state Completed()
+21:10:11.167 | INFO    | Task run 'upload_to_gcs-b14' - Uploaded 90267 records to gs://gamingdata-487900-bucket/raw/publishers/snapshot_date=2026-04-19/publishers.ndjson
+21:10:11.174 | INFO    | Task run 'upload_to_gcs-b14' - Finished in state Completed()
+21:10:14.637 | INFO    | Task run 'upload_to_gcs-377' - Uploaded 9727 records to gs://gamingdata-487900-bucket/raw/tags/snapshot_date=2026-04-19/tags.ndjson
+21:10:14.641 | INFO    | Task run 'upload_to_gcs-377' - Finished in state Completed()
+21:10:15.552 | INFO    | Task run 'write_last_run_date-969' - State updated — last successful run set to: 2026-04-19
+21:10:15.558 | INFO    | Task run 'write_last_run_date-969' - Finished in state Completed()
+21:10:15.636 | INFO    | Flow run 'sassy-catfish' - Finished in state Completed()
+21:10:15.637 | INFO    | Flow run 'real-poodle' - Step 2: Load GCS to bronze BigQuery
+21:10:15.665 | INFO    | Flow run 'helpful-crane' - Beginning subflow run 'helpful-crane' for flow 'load_to_bronze'
+21:10:25.418 | INFO    | Task run 'write_to_staging-51b' - Loaded to staging: games for 2026-04-13
+21:10:25.423 | INFO    | Task run 'write_to_staging-51b' - Finished in state Completed()
+21:10:26.610 | INFO    | Task run 'audit_staging-64b' - Row count Test passed: games staging has 3248 rows
+21:10:27.811 | INFO    | Task run 'audit_staging-64b' - No Null id's in games staging table. ID test passed.
+21:10:27.816 | INFO    | Task run 'audit_staging-64b' - Finished in state Completed()
+21:10:35.930 | INFO    | Task run 'publish_to_bronze-0a3' - Published games to bronze
+21:10:36.084 | INFO    | Task run 'publish_to_bronze-0a3' - Dropped stg_games
+21:10:36.088 | INFO    | Task run 'publish_to_bronze-0a3' - Finished in state Completed()
+21:11:01.103 | INFO    | Task run 'write_to_staging-f12' - Loaded to staging: games for 2026-04-19
+21:11:01.108 | INFO    | Task run 'write_to_staging-f12' - Finished in state Completed()
+21:11:02.175 | INFO    | Task run 'audit_staging-b8d' - Row count Test passed: games staging has 1556 rows
+21:11:03.441 | INFO    | Task run 'audit_staging-b8d' - No Null id's in games staging table. ID test passed.
+21:11:03.445 | INFO    | Task run 'audit_staging-b8d' - Finished in state Completed()
+21:11:09.590 | INFO    | Task run 'publish_to_bronze-e94' - Published games to bronze
+21:11:09.826 | INFO    | Task run 'publish_to_bronze-e94' - Dropped stg_games
+21:11:09.831 | INFO    | Task run 'publish_to_bronze-e94' - Finished in state Completed()
+21:11:22.392 | INFO    | Task run 'write_to_staging-300' - Loaded to staging: genres for 2026-04-19
+21:11:22.396 | INFO    | Task run 'write_to_staging-300' - Finished in state Completed()
+21:11:23.346 | INFO    | Task run 'audit_staging-ff3' - Row count Test passed: genres staging has 19 rows
+21:11:24.462 | INFO    | Task run 'audit_staging-ff3' - No Null id's in genres staging table. ID test passed.
+21:11:24.466 | INFO    | Task run 'audit_staging-ff3' - Finished in state Completed()
+21:11:32.573 | INFO    | Task run 'publish_to_bronze-82b' - Published genres to bronze
+21:11:32.740 | INFO    | Task run 'publish_to_bronze-82b' - Dropped stg_genres
+21:11:32.745 | INFO    | Task run 'publish_to_bronze-82b' - Finished in state Completed()
+21:11:39.668 | INFO    | Task run 'write_to_staging-b88' - Loaded to staging: platforms for 2026-04-19
+21:11:39.672 | INFO    | Task run 'write_to_staging-b88' - Finished in state Completed()
+21:11:40.825 | INFO    | Task run 'audit_staging-9b9' - Row count Test passed: platforms staging has 51 rows
+21:11:41.747 | INFO    | Task run 'audit_staging-9b9' - No Null id's in platforms staging table. ID test passed.
+21:11:41.752 | INFO    | Task run 'audit_staging-9b9' - Finished in state Completed()
+21:11:47.005 | INFO    | Task run 'publish_to_bronze-273' - Published platforms to bronze
+21:11:47.309 | INFO    | Task run 'publish_to_bronze-273' - Dropped stg_platforms
+21:11:47.313 | INFO    | Task run 'publish_to_bronze-273' - Finished in state Completed()
+21:11:59.808 | INFO    | Task run 'write_to_staging-733' - Loaded to staging: publishers for 2026-04-19
+21:11:59.814 | INFO    | Task run 'write_to_staging-733' - Finished in state Completed()
+21:12:00.789 | INFO    | Task run 'audit_staging-908' - Row count Test passed: publishers staging has 90267 rows
+21:12:01.897 | INFO    | Task run 'audit_staging-908' - No Null id's in publishers staging table. ID test passed.
+21:12:01.902 | INFO    | Task run 'audit_staging-908' - Finished in state Completed()
+21:12:09.591 | INFO    | Task run 'publish_to_bronze-dae' - Published publishers to bronze
+21:12:09.727 | INFO    | Task run 'publish_to_bronze-dae' - Dropped stg_publishers
+21:12:09.730 | INFO    | Task run 'publish_to_bronze-dae' - Finished in state Completed()
+21:12:15.993 | INFO    | Task run 'write_to_staging-786' - Loaded to staging: tags for 2026-04-19
+21:12:15.997 | INFO    | Task run 'write_to_staging-786' - Finished in state Completed()
+21:12:17.093 | INFO    | Task run 'audit_staging-cf8' - Row count Test passed: tags staging has 9727 rows
+21:12:17.966 | INFO    | Task run 'audit_staging-cf8' - No Null id's in tags staging table. ID test passed.
+21:12:17.971 | INFO    | Task run 'audit_staging-cf8' - Finished in state Completed()
+21:12:23.306 | INFO    | Task run 'publish_to_bronze-720' - Published tags to bronze
+21:12:23.491 | INFO    | Task run 'publish_to_bronze-720' - Dropped stg_tags
+21:12:23.497 | INFO    | Task run 'publish_to_bronze-720' - Finished in state Completed()
+21:12:23.531 | INFO    | Flow run 'helpful-crane' - Finished in state Completed()
+21:12:23.532 | INFO    | Flow run 'real-poodle' - Step 3: Build silver layer
+21:12:23.534 | INFO    | Task run 'run_dbt_build-2ea' - Running: dbt build --project-dir /code/gaming_data_dbt -s path:models/rawg/silver
+21:13:49.266 | INFO    | Task run 'run_dbt_build-2ea' - 21:12:24  Running with dbt=1.11.6
+21:12:29  Registered adapter: bigquery=1.11.0
+21:12:30  Found 20 models, 43 data tests, 5 sources, 539 macros
+21:12:30  
+21:12:30  Concurrency: 4 threads (target='dev')
+21:12:30  
+21:12:31  1 of 51 START sql incremental model silver.stg_dim_games ....................... [RUN]
+21:12:31  2 of 51 START sql table model silver.stg_dim_genres ............................ [RUN]
+21:12:31  3 of 51 START sql table model silver.stg_dim_platforms ......................... [RUN]
+21:12:31  4 of 51 START sql table model silver.stg_dim_tags .............................. [RUN]
+21:12:34  4 of 51 OK created sql table model silver.stg_dim_tags ......................... [CREATE TABLE (9.5k rows, 3.8 MiB processed) in 3.32s]
+21:12:34  3 of 51 OK created sql table model silver.stg_dim_platforms .................... [CREATE TABLE (51.0 rows, 19.2 KiB processed) in 3.33s]
+21:12:34  5 of 51 START sql incremental model silver.stg_fct_game_snapshots .............. [RUN]
+21:12:34  6 of 51 START test not_null_stg_dim_tags_name .................................. [RUN]
+21:12:34  2 of 51 OK created sql table model silver.stg_dim_genres ....................... [CREATE TABLE (19.0 rows, 7.0 KiB processed) in 3.56s]
+21:12:34  7 of 51 START test not_null_stg_dim_tags_slug .................................. [RUN]
+21:12:36  6 of 51 PASS not_null_stg_dim_tags_name ........................................ [PASS in 1.62s]
+21:12:36  8 of 51 START test not_null_stg_dim_tags_tag_id ................................ [RUN]
+21:12:36  7 of 51 PASS not_null_stg_dim_tags_slug ........................................ [PASS in 1.47s]
+21:12:36  9 of 51 START test unique_stg_dim_tags_tag_id .................................. [RUN]
+21:12:38  9 of 51 PASS unique_stg_dim_tags_tag_id ........................................ [PASS in 1.53s]
+21:12:38  10 of 51 START test not_null_stg_dim_platforms_name ............................ [RUN]
+21:12:38  8 of 51 PASS not_null_stg_dim_tags_tag_id ...................................... [PASS in 1.97s]
+21:12:38  11 of 51 START test not_null_stg_dim_platforms_platform_id ..................... [RUN]
+21:12:39  10 of 51 PASS not_null_stg_dim_platforms_name .................................. [PASS in 1.37s]
+21:12:39  12 of 51 START test not_null_stg_dim_platforms_slug ............................ [RUN]
+21:12:40  11 of 51 PASS not_null_stg_dim_platforms_platform_id ........................... [PASS in 1.67s]
+21:12:40  13 of 51 START test unique_stg_dim_platforms_platform_id ....................... [RUN]
+21:12:41  12 of 51 PASS not_null_stg_dim_platforms_slug .................................. [PASS in 1.66s]
+21:12:41  14 of 51 START test not_null_stg_dim_genres_genre_id ........................... [RUN]
+21:12:41  13 of 51 PASS unique_stg_dim_platforms_platform_id ............................. [PASS in 1.46s]
+21:12:41  15 of 51 START test not_null_stg_dim_genres_name ............................... [RUN]
+21:12:42  14 of 51 PASS not_null_stg_dim_genres_genre_id ................................. [PASS in 1.58s]
+21:12:42  16 of 51 START test not_null_stg_dim_genres_slug ............................... [RUN]
+21:12:42  15 of 51 PASS not_null_stg_dim_genres_name ..................................... [PASS in 1.45s]
+21:12:42  17 of 51 START test unique_stg_dim_genres_genre_id ............................. [RUN]
+21:12:44  16 of 51 PASS not_null_stg_dim_genres_slug ..................................... [PASS in 1.47s]
+21:12:44  18 of 51 START sql table model silver.dim_tags ................................. [RUN]
+21:12:44  17 of 51 PASS unique_stg_dim_genres_genre_id ................................... [PASS in 1.47s]
+21:12:44  19 of 51 START sql table model silver.dim_platforms ............................ [RUN]
+21:12:47  18 of 51 OK created sql table model silver.dim_tags ............................ [CREATE TABLE (9.5k rows, 1.1 MiB processed) in 3.09s]
+21:12:47  20 of 51 START sql table model silver.dim_genres ............................... [RUN]
+21:12:47  19 of 51 OK created sql table model silver.dim_platforms ....................... [CREATE TABLE (51.0 rows, 5.8 KiB processed) in 2.89s]
+21:12:49  5 of 51 OK created sql incremental model silver.stg_fct_game_snapshots ......... [SCRIPT (71.6 MiB processed) in 15.04s]
+21:12:49  21 of 51 START test not_null_stg_fct_game_snapshots_game_id .................... [RUN]
+21:12:49  22 of 51 START test not_null_stg_fct_game_snapshots_load_date .................. [RUN]
+21:12:50  20 of 51 OK created sql table model silver.dim_genres .......................... [CREATE TABLE (19.0 rows, 2.1 KiB processed) in 2.95s]
+21:12:51  21 of 51 PASS not_null_stg_fct_game_snapshots_game_id .......................... [PASS in 1.48s]
+21:12:51  22 of 51 PASS not_null_stg_fct_game_snapshots_load_date ........................ [PASS in 1.49s]
+21:12:51  23 of 51 START sql incremental model silver.fct_game_snapshots ................. [RUN]
+21:12:59  23 of 51 OK created sql incremental model silver.fct_game_snapshots ............ [SCRIPT (6.0 MiB processed) in 8.18s]
+21:13:24  1 of 51 OK created sql incremental model silver.stg_dim_games .................. [MERGE (1.6k rows, 1.6 GiB processed) in 52.74s]
+21:13:24  24 of 51 START test not_null_stg_dim_games_game_id ............................. [RUN]
+21:13:24  25 of 51 START test not_null_stg_dim_games_load_date ........................... [RUN]
+21:13:24  26 of 51 START test not_null_stg_dim_games_name ................................ [RUN]
+21:13:24  27 of 51 START test not_null_stg_dim_games_slug ................................ [RUN]
+21:13:26  27 of 51 PASS not_null_stg_dim_games_slug ...................................... [PASS in 1.95s]
+21:13:26  28 of 51 START test not_null_stg_dim_games_updated ............................. [RUN]
+21:13:26  26 of 51 PASS not_null_stg_dim_games_name ...................................... [PASS in 2.07s]
+21:13:26  29 of 51 START test unique_stg_dim_games_game_id ............................... [RUN]
+21:13:26  25 of 51 PASS not_null_stg_dim_games_load_date ................................. [PASS in 2.12s]
+21:13:26  24 of 51 PASS not_null_stg_dim_games_game_id ................................... [PASS in 2.14s]
+21:13:28  28 of 51 PASS not_null_stg_dim_games_updated ................................... [PASS in 1.88s]
+21:13:28  29 of 51 PASS unique_stg_dim_games_game_id ..................................... [PASS in 1.83s]
+21:13:28  30 of 51 START sql incremental model silver.dim_games .......................... [RUN]
+21:13:28  31 of 51 START sql incremental model silver.stg_brdg_game_genres ............... [RUN]
+21:13:28  32 of 51 START sql incremental model silver.stg_brdg_game_platforms ............ [RUN]
+21:13:28  33 of 51 START sql incremental model silver.stg_brdg_game_tags ................. [RUN]
+21:13:33  31 of 51 OK created sql incremental model silver.stg_brdg_game_genres .......... [MERGE (3.1k rows, 36.1 MiB processed) in 5.63s]
+21:13:33  34 of 51 START test not_null_stg_brdg_game_genres_game_id ...................... [RUN]
+21:13:34  33 of 51 OK created sql incremental model silver.stg_brdg_game_tags ............ [MERGE (28.2k rows, 160.5 MiB processed) in 6.54s]
+21:13:34  35 of 51 START test not_null_stg_brdg_game_genres_genre_id ..................... [RUN]
+21:13:35  34 of 51 PASS not_null_stg_brdg_game_genres_game_id ............................ [PASS in 1.37s]
+21:13:35  36 of 51 START test not_null_stg_brdg_game_genres_load_date .................... [RUN]
+21:13:36  32 of 51 OK created sql incremental model silver.stg_brdg_game_platforms ....... [MERGE (4.6k rows, 38.5 MiB processed) in 7.95s]
+21:13:36  37 of 51 START test not_null_stg_brdg_game_tags_game_id ........................ [RUN]
+21:13:36  35 of 51 PASS not_null_stg_brdg_game_genres_genre_id ........................... [PASS in 1.53s]
+21:13:36  38 of 51 START test not_null_stg_brdg_game_tags_load_date ...................... [RUN]
+21:13:36  36 of 51 PASS not_null_stg_brdg_game_genres_load_date .......................... [PASS in 1.41s]
+21:13:36  39 of 51 START test not_null_stg_brdg_game_tags_tag_id ......................... [RUN]
+21:13:37  38 of 51 PASS not_null_stg_brdg_game_tags_load_date ............................ [PASS in 1.60s]
+21:13:37  40 of 51 START test not_null_stg_brdg_game_platforms_game_id ................... [RUN]
+21:13:38  39 of 51 PASS not_null_stg_brdg_game_tags_tag_id ............................... [PASS in 1.51s]
+21:13:38  41 of 51 START test not_null_stg_brdg_game_platforms_load_date ................. [RUN]
+21:13:38  37 of 51 PASS not_null_stg_brdg_game_tags_game_id .............................. [PASS in 2.02s]
+21:13:38  42 of 51 START test not_null_stg_brdg_game_platforms_platform_id ............... [RUN]
+21:13:39  40 of 51 PASS not_null_stg_brdg_game_platforms_game_id ......................... [PASS in 1.47s]
+21:13:39  43 of 51 START sql incremental model silver.brdg_game_genres ................... [RUN]
+21:13:39  42 of 51 PASS not_null_stg_brdg_game_platforms_platform_id ..................... [PASS in 1.52s]
+21:13:39  44 of 51 START sql incremental model silver.brdg_game_tags ..................... [RUN]
+21:13:40  41 of 51 PASS not_null_stg_brdg_game_platforms_load_date ....................... [PASS in 2.19s]
+21:13:40  45 of 51 START sql incremental model silver.brdg_game_platforms ................ [RUN]
+21:13:41  30 of 51 OK created sql incremental model silver.dim_games ..................... [MERGE (1.6k rows, 294.3 MiB processed) in 13.17s]
+21:13:41  46 of 51 START test relationships_fct_game_snapshots_game_id__game_id__ref_dim_games_  [RUN]
+21:13:43  46 of 51 PASS relationships_fct_game_snapshots_game_id__game_id__ref_dim_games_  [PASS in 2.50s]
+21:13:44  43 of 51 OK created sql incremental model silver.brdg_game_genres .............. [MERGE (3.1k rows, 41.6 MiB processed) in 5.46s]
+21:13:44  47 of 51 START test relationships_brdg_game_genres_game_id__game_id__ref_dim_games_  [RUN]
+21:13:44  48 of 51 START test relationships_brdg_game_genres_genre_id__genre_id__ref_dim_genres_  [RUN]
+21:13:45  45 of 51 OK created sql incremental model silver.brdg_game_platforms ........... [MERGE (4.6k rows, 45.5 MiB processed) in 4.83s]
+21:13:45  44 of 51 OK created sql incremental model silver.brdg_game_tags ................ [MERGE (28.2k rows, 234.9 MiB processed) in 5.44s]
+21:13:45  49 of 51 START test relationships_brdg_game_platforms_game_id__game_id__ref_dim_games_  [RUN]
+21:13:45  50 of 51 START test relationships_brdg_game_platforms_platform_id__platform_id__ref_dim_platforms_  [RUN]
+21:13:46  48 of 51 PASS relationships_brdg_game_genres_genre_id__genre_id__ref_dim_genres_  [PASS in 1.56s]
+21:13:46  51 of 51 START test relationships_brdg_game_tags_game_id__game_id__ref_dim_games_  [RUN]
+21:13:46  50 of 51 PASS relationships_brdg_game_platforms_platform_id__platform_id__ref_dim_platforms_  [PASS in 1.24s]
+21:13:46  47 of 51 PASS relationships_brdg_game_genres_game_id__game_id__ref_dim_games_ .. [PASS in 2.17s]
+21:13:46  49 of 51 PASS relationships_brdg_game_platforms_game_id__game_id__ref_dim_games_  [PASS in 1.86s]
+21:13:48  51 of 51 PASS relationships_brdg_game_tags_game_id__game_id__ref_dim_games_ .... [PASS in 2.01s]
+21:13:48  
+21:13:48  Finished running 10 incremental models, 6 table models, 35 data tests in 0 hours 1 minutes and 18.25 seconds (78.25s).
+21:13:48  
+21:13:48  Completed successfully
+21:13:48  
+21:13:48  Done. PASS=51 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=51
+
+</details>
+
+The master pipeline is a single Prefect flow (`flows/master_pipeline.py`) that chains extract, load, silver, and gold in sequence (above you can see the logs for a full run, I will add a DAG screnshot when uploaded to prefect cloud). If any step fails, subsequent steps don't run. dbt is invoked via subprocess from within the flow, and `dbt build` runs models and tests together so that test failures block downstream models.
 
 # Data Visualization
 
